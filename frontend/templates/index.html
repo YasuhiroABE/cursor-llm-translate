@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Language Translation App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 2em; 
+            max-width: 800px; 
+            margin-left: auto; 
+            margin-right: auto; 
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1em;
+        }
+        .language-switcher {
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+        }
+        .language-switcher label {
+            font-weight: bold;
+            color: #555;
+        }
+        .language-switcher select {
+            padding: 0.3em 0.5em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: white;
+        }
+        .container { 
+            display: flex; 
+            gap: 2em; 
+            margin-top: 2em; 
+        }
+        .input-section, .output-section { 
+            flex: 1; 
+        }
+        textarea { 
+            width: 100%; 
+            height: 200px; 
+            margin-top: 0.5em; 
+            padding: 0.5em; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+        }
+        select { 
+            margin: 1em 0; 
+            padding: 0.5em; 
+            border-radius: 4px; 
+        }
+        button { 
+            background-color: #007bff; 
+            color: white; 
+            padding: 0.5em 1em; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            margin-top: 1em; 
+            margin-right: 0.5em;
+        }
+        button:hover { 
+            background-color: #0056b3; 
+        }
+        button:disabled { 
+            background-color: #ccc; 
+            cursor: not-allowed; 
+        }
+        .result { 
+            margin-top: 1em; 
+            padding: 1em; 
+            border: 1px solid #ccc; 
+            border-radius: 4px; 
+            background-color: #f8f9fa; 
+            min-height: 100px; 
+        }
+        .error { 
+            color: red; 
+            margin-top: 1em; 
+        }
+        .loading { 
+            color: #666; 
+            font-style: italic; 
+        }
+        .status {
+            margin-top: 1em;
+            padding: 0.5em;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .status.healthy {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .status.unhealthy {
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .url-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #28a745;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-20px);
+            transition: all 0.3s ease;
+        }
+        .url-notification.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div id="url-notification" class="url-notification"></div>
+    
+    <div class="header">
+        <div>
+            <h1>Language Translation App</h1>
+            <p>Translate between English and Japanese using LLM</p>
+        </div>
+        <div id="language-switcher-container"></div>
+    </div>
+    
+    <div id="status" class="status">Checking backend status...</div>
+    
+    <div class="container">
+        <div class="input-section">
+            <h3>Input Text</h3>
+            <select id="direction">
+                <option value="en_to_ja">English → Japanese</option>
+                <option value="ja_to_en">Japanese → English</option>
+            </select>
+            <textarea id="input-text" placeholder="Enter text to translate..."></textarea>
+            <button id="translate-btn" onclick="translateText()">Translate on Local</button>
+            <button id="google-btn" type="button" onclick="openGoogleTranslate()">Google Translate</button>
+        </div>
+        
+        <div class="output-section">
+            <h3>Translation</h3>
+            <div id="result" class="result">
+                <div class="loading">Translation will appear here...</div>
+            </div>
+            <div id="duration" style="margin-top:0.5em; color:#555; font-size:0.95em;"></div>
+        </div>
+    </div>
+
+    <script src="/static/i18n.js"></script>
+    <script>
+        // Backend URL from server template
+        const BACKEND_URL = '{{ backend_url }}';
+        
+        // Initialize i18n and check backend status on page load
+        window.onload = function() {
+            // Initialize i18n first
+            i18n.init();
+            
+            // Add language switcher to the page
+            const switcherContainer = document.getElementById('language-switcher-container');
+            if (switcherContainer) {
+                switcherContainer.innerHTML = i18n.createLanguageSwitcher();
+                console.log('Language switcher initialized');
+            } else {
+                console.log('Language switcher container not found during initialization');
+            }
+            
+            // Set initial status text
+            const statusDiv = document.getElementById('status');
+            if (statusDiv) {
+                statusDiv.textContent = i18n.t('checkingBackend');
+            }
+            
+            // Then check backend status
+            checkBackendStatus();
+        };
+        
+        // Function to detect language based on character composition
+        function detectLanguage(text) {
+            if (!text.trim()) return null;
+            
+            // Count ASCII characters (English) vs non-ASCII characters (Japanese)
+            const asciiChars = text.match(/[a-zA-Z0-9\s.,!?;:'"()\-]/g) || [];
+            const nonAsciiChars = text.match(/[^\x00-\x7F]/g) || [];
+            
+            const asciiCount = asciiChars.join('').length;
+            const nonAsciiCount = nonAsciiChars.length;
+            
+            // If more than 70% of characters are ASCII, consider it English
+            const totalChars = asciiCount + nonAsciiCount;
+            if (totalChars === 0) return null;
+            
+            const asciiRatio = asciiCount / totalChars;
+            return asciiRatio > 0.7 ? 'en_to_ja' : 'ja_to_en';
+        }
+        
+        // Function to auto-select translation direction
+        function autoSelectDirection() {
+            const text = document.getElementById('input-text').value;
+            const detectedDirection = detectLanguage(text);
+            
+            if (detectedDirection) {
+                document.getElementById('direction').value = detectedDirection;
+            }
+        }
+        
+        // Global variable to store backend status
+        let backendStatus = 'checking'; // 'checking', 'healthy', 'unhealthy', 'unavailable'
+        
+        async function checkBackendStatus() {
+            const statusDiv = document.getElementById('status');
+            try {
+                const response = await fetch(`${BACKEND_URL}/health`);
+                const data = await response.json();
+                if (data.status === 'healthy' && data.model_loaded) {
+                    backendStatus = 'healthy';
+                    statusDiv.textContent = i18n.t('backendHealthy');
+                    statusDiv.className = 'status healthy';
+                } else {
+                    backendStatus = 'unhealthy';
+                    statusDiv.textContent = i18n.t('backendUnhealthy');
+                    statusDiv.className = 'status unhealthy';
+                }
+            } catch (error) {
+                backendStatus = 'unavailable';
+                statusDiv.textContent = i18n.t('backendUnavailable');
+                statusDiv.className = 'status unhealthy';
+            }
+        }
+        
+        async function translateText() {
+            const text = document.getElementById('input-text').value.trim();
+            const direction = document.getElementById('direction').value;
+            const resultDiv = document.getElementById('result');
+            const translateBtn = document.getElementById('translate-btn');
+            const durationDiv = document.getElementById('duration');
+            
+            if (!text) {
+                resultDiv.innerHTML = `<div class="error">${i18n.t('pleaseEnterText')}</div>`;
+                durationDiv.textContent = '';
+                return;
+            }
+            
+            // Show loading state
+            translateBtn.disabled = true;
+            translateBtn.textContent = i18n.t('translating');
+            resultDiv.innerHTML = `<div class="loading">${i18n.t('translating')}</div>`;
+            durationDiv.textContent = '';
+            
+            const startTime = performance.now();
+            try {
+                const response = await fetch(`${BACKEND_URL}/translate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text, direction })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || `HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                const endTime = performance.now();
+                const duration = ((endTime - startTime) / 1000).toFixed(2);
+                resultDiv.innerHTML = `<div>${data.translation}</div>`;
+                durationDiv.textContent = `${i18n.t('processingTime')} ${duration} ${i18n.t('seconds')}`;
+            } catch (error) {
+                resultDiv.innerHTML = `<div class="error">${i18n.t('error')} ${error.message}</div>`;
+                durationDiv.textContent = '';
+            } finally {
+                translateBtn.disabled = false;
+                translateBtn.textContent = i18n.t('translateLocal');
+            }
+        }
+        
+        function openGoogleTranslate() {
+            const text = document.getElementById('input-text').value.trim();
+            const direction = document.getElementById('direction').value;
+            let sl = 'en', tl = 'ja';
+            if (direction === 'ja_to_en') {
+                sl = 'ja';
+                tl = 'en';
+            }
+            const url = `https://translate.google.com/?sl=${sl}&tl=${tl}&text=${encodeURIComponent(text)}&op=translate`;
+            window.open(url, '_blank');
+        }
+        
+        // Allow Enter key to trigger translation
+        document.getElementById('input-text').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                translateText();
+            }
+        });
+        
+        // Auto-select translation direction based on input text
+        document.getElementById('input-text').addEventListener('input', function() {
+            autoSelectDirection();
+        });
+        
+        // Handle browser back/forward buttons
+        window.addEventListener('popstate', function() {
+            // Re-initialize i18n to check for URL changes
+            i18n.init();
+        });
+    </script>
+</body>
+</html> 

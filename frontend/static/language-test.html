@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Language Query String Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        .test-links { margin: 2em 0; }
+        .test-links a { 
+            display: inline-block; 
+            margin: 0.5em; 
+            padding: 0.5em 1em; 
+            background: #007bff; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 4px; 
+        }
+        .test-links a:hover { background: #0056b3; }
+        .current-url { 
+            background: #f8f9fa; 
+            padding: 1em; 
+            border-radius: 4px; 
+            font-family: monospace; 
+            margin: 1em 0; 
+        }
+    </style>
+</head>
+<body>
+    <h1>Language Query String Test</h1>
+    
+    <div class="test-links">
+        <h3>Test Links:</h3>
+        <a href="/">Default (English)</a>
+        <a href="/?lang=en">English</a>
+        <a href="/?lang=ja">Japanese</a>
+    </div>
+    
+    <div class="current-url">
+        <strong>Current URL:</strong> <span id="current-url"></span>
+    </div>
+    
+    <div class="test-section">
+        <h3>Instructions:</h3>
+        <ol>
+            <li>Click the links above to test different language URLs</li>
+            <li>Use the language switcher dropdown to change language</li>
+            <li>Notice how the URL updates automatically</li>
+            <li>Try using browser back/forward buttons</li>
+            <li>Share URLs with friends - they'll open in your preferred language!</li>
+        </ol>
+    </div>
+    
+    <script>
+        // Update current URL display
+        function updateURLDisplay() {
+            document.getElementById('current-url').textContent = window.location.href;
+        }
+        
+        window.onload = function() {
+            updateURLDisplay();
+        };
+        
+        // Update URL display when it changes
+        window.addEventListener('popstate', updateURLDisplay);
+    </script>
+</body>
+</html> 

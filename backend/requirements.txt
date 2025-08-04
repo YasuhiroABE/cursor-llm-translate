@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+pydantic
+transformers
+bitsandbytes 
+numba
+accelerate
+causal_conv1d
+mamba_ssm
+
+## if you want to use the sm_120 compute model, recompile the causal_conv1d and mamba from the original git repo.

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>i18n Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        .test-section { margin: 1em 0; padding: 1em; border: 1px solid #ccc; }
+        .language-switcher { margin: 1em 0; }
+        .language-switcher select { padding: 0.5em; }
+    </style>
+</head>
+<body>
+    <h1>i18n Test Page</h1>
+    
+    <div class="language-switcher">
+        <label for="language-select">Language:</label>
+        <select id="language-select" onchange="i18n.setLanguage(this.value)">
+            <option value="en">English</option>
+            <option value="ja">日本語</option>
+        </select>
+    </div>
+    
+    <div class="test-section">
+        <h2>Test Translations</h2>
+        <p><strong>Page Title:</strong> <span id="page-title"></span></p>
+        <p><strong>Language:</strong> <span id="language-label"></span></p>
+        <p><strong>English:</strong> <span id="english-label"></span></p>
+        <p><strong>Japanese:</strong> <span id="japanese-label"></span></p>
+    </div>
+    
+    <script src="i18n.js"></script>
+    <script>
+        window.onload = function() {
+            i18n.init();
+            updateTestDisplay();
+        };
+        
+        function updateTestDisplay() {
+            document.getElementById('page-title').textContent = i18n.t('pageTitle');
+            document.getElementById('language-label').textContent = i18n.t('language');
+            document.getElementById('english-label').textContent = i18n.t('english');
+            document.getElementById('japanese-label').textContent = i18n.t('japanese');
+            
+            // Update language switcher
+            const langSelect = document.getElementById('language-select');
+            if (langSelect) {
+                langSelect.value = i18n.currentLang;
+            }
+        }
+        
+        // Override the setLanguage method to also update our test display
+        const originalSetLanguage = i18n.setLanguage;
+        i18n.setLanguage = function(lang) {
+            originalSetLanguage.call(this, lang);
+            updateTestDisplay();
+        };
+    </script>
+</body>
+</html> 
