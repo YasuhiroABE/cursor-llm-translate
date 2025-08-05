@@ -17,6 +17,12 @@ URL: [https://huggingface.co/pfnet/plamo-2-translate](https://huggingface.co/pfn
 make setup-venv
 ```
 
+If you need the **sm_120** cuda compute capability, please run the following command instead of or next to the above command.
+
+```bash:
+make setup-sm120
+```
+
 ## Configuration
 
 The application can be configured using environment variables or Makefile targets.
