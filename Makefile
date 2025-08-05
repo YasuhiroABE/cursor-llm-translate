@@ -4,7 +4,7 @@ BACKEND_HOST ?= localhost
 BACKEND_PORT ?= 4000
 FRONTEND_HOST ?= localhost
 FRONTEND_PORT ?= 8000
-TORCH_CUDA_ARCH_LIST ?= "12.0 8.9 8.6"
+TORCH_CUDA_ARCH_LIST ?= 12.0 8.9 8.6
 
 .PHONY: setup-venv
 setup-venv:
@@ -21,6 +21,7 @@ setup-venv:
 .PHONY: setup-sm120
 setup-sm120: setup-venv
 	( . venv/bin/activate ; git clone https://github.com/Dao-AILab/causal-conv1d.git )
+	sed -i -e 's/sm_100/sm_120/' -e 's/compute_100/compute_120/' causal-conv1d/setup.py
 	( . venv/bin/activate ; cd causal-conv1d ; pip install -e . --no-build-isolation --break-system-packages )
 
 .PHONY: run-server
@@ -33,7 +34,7 @@ run-frontend:
 
 .PHONY: run-backend
 run-backend:
-	( . venv/bin/activate ; cd backend ; env TORCH_CUDA_ARCH_LIST=$(TORCH_CUDA_ARCH_LIST) uvicorn main:app --reload --host $(BACKEND_HOST) --port $(BACKEND_PORT)  )
+	( . venv/bin/activate ; cd backend ; env TORCH_CUDA_ARCH_LIST="$(TORCH_CUDA_ARCH_LIST)" uvicorn main:app --reload --host $(BACKEND_HOST) --port $(BACKEND_PORT)  )
 
 .PHONY: run-all
 run-all:
