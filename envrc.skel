@@ -10,5 +10,5 @@
 ##  $ ( make run-backend ) &
 
 export BACKEND_HOST=localhost
-export FROMTEND_HOST=localhost
+export FRONTEND_HOST=localhost
 
