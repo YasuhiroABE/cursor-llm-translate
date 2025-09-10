@@ -1,0 +1,14 @@
+##
+## envrc.skel - template file for environment variables
+##
+
+## Usage:
+##  $ cp envrc.skel envrc
+##  $ vi envrc    # modify the envrc for your setting
+##  $ . ./envrc
+##  $ ( make run-frontend ) &
+##  $ ( make run-backend ) &
+
+export BACKEND_HOST=localhost
+export FROMTEND_HOST=localhost
+
