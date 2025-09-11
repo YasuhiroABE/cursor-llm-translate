@@ -17,7 +17,9 @@ URL: [https://huggingface.co/pfnet/plamo-2-translate](https://huggingface.co/pfn
 make setup-venv
 ```
 
-If you need the **sm_120** cuda compute capability, please run the following command instead of or next to the above command.
+If you need the **sm_120** cuda compute capability and you have an issue with causal-conv1d, please run the following command instead of, or in addition to, the one above.
+
+In the current circumstances, the ``make setup-venv`` will successfully build the runtime environment.
 
 ```bash:
 make setup-sm120
