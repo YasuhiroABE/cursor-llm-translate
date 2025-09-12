@@ -13,7 +13,7 @@ setup-venv:
 	( . venv/bin/activate ; pip install wheel )
 	( . venv/bin/activate ; pip install setuptools )
 	( . venv/bin/activate ; pip install --upgrade pip setuptools wheel )
-	( . venv/bin/activate ; pip install --upgrade torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128 )
+	( . venv/bin/activate ; pip install --upgrade torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu129 )
 	( . venv/bin/activate ; pip install --upgrade "nvidia-modelopt[all]" )
 	( . venv/bin/activate ; pip install -r backend/requirements.txt )
 	( . venv/bin/activate ; pip install -r frontend/requirements.txt )
